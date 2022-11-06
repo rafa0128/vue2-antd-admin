@@ -5,16 +5,16 @@
       <div class="user-layout-lang">
         <select-lang class="select-lang-trigger" />
       </div>
-      <div class="user-layout-content" >
-        <div class="top">
-          <div class="header" style="margin-bottom: 10px">
+      <div class="user-layout-content">
+        <div class="top" style="margin-bottom: 50px">
+          <div class="header">
             <a href="/">
-              <img src="~@/assets/logo.svg" class="logo" alt="logo">
-              <span class="title">Ant Vue</span>
+              <img src="~@/assets/logo.png" class="logo" alt="logo">
+              <span class="title">CMS PRO</span>
             </a>
           </div>
           <!--<div class="desc">-->
-            <!--{{ $t('layouts.userLayout.title') }}-->
+            <!--waiting till we have money-->
           <!--</div>-->
         </div>
 

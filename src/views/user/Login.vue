@@ -12,7 +12,10 @@
         :tabBarStyle="{ textAlign: 'center', borderBottom: 'unset' }"
         @change="handleTabClick"
       >
-        <a-tab-pane key="tab1" :tab="$t('user.login.tab-login-credentials')">
+        <a-tab-pane key="tab1" :tab="$t('扫码登录')" force-render>
+          <div id="loginContainerId"></div>
+        </a-tab-pane>
+        <a-tab-pane key="tab2" :tab="$t('账号登录')">
           <a-alert v-if="isLoginError" type="error" showIcon style="margin-bottom: 24px;" :message="$t('user.login.message-invalid-credentials')" />
           <a-form-item>
             <a-input
@@ -40,54 +43,19 @@
               <a-icon slot="prefix" type="lock" :style="{ color: 'rgba(0,0,0,.25)' }"/>
             </a-input-password>
           </a-form-item>
-        </a-tab-pane>
-        <a-tab-pane key="tab2" :tab="$t('user.login.tab-login-mobile')">
-          <a-form-item>
-            <a-input size="large" type="text" :placeholder="$t('user.login.mobile.placeholder')" v-decorator="['mobile', {rules: [{ required: true, pattern: /^1[34578]\d{9}$/, message: $t('user.login.mobile.placeholder') }], validateTrigger: 'change'}]">
-              <a-icon slot="prefix" type="mobile" :style="{ color: 'rgba(0,0,0,.25)' }"/>
-            </a-input>
-          </a-form-item>
 
-          <a-row :gutter="16">
-            <a-col class="gutter-row" :span="16">
-              <a-form-item>
-                <a-input size="large" type="text" :placeholder="$t('user.login.mobile.verification-code.placeholder')" v-decorator="['captcha', {rules: [{ required: true, message: $t('user.verification-code.required') }], validateTrigger: 'blur'}]">
-                  <a-icon slot="prefix" type="mail" :style="{ color: 'rgba(0,0,0,.25)' }"/>
-                </a-input>
-              </a-form-item>
-            </a-col>
-            <a-col class="gutter-row" :span="8">
-              <a-button
-                class="getCaptcha"
-                tabindex="-1"
-                :disabled="state.smsSendBtn"
-                @click.stop.prevent="getCaptcha"
-                v-text="!state.smsSendBtn && $t('user.register.get-verification-code') || (state.time+' s')"
-              ></a-button>
-            </a-col>
-          </a-row>
+          <a-form-item style="margin-top:24px">
+            <a-button
+              size="large"
+              type="primary"
+              htmlType="submit"
+              class="login-button"
+              :loading="state.loginBtn"
+              :disabled="state.loginBtn"
+            >登录</a-button>
+          </a-form-item>
         </a-tab-pane>
       </a-tabs>
-
-      <a-form-item>
-        <a-checkbox v-decorator="['rememberMe', { valuePropName: 'checked' }]">{{ $t('user.login.remember-me') }}</a-checkbox>
-        <router-link
-          :to="{ name: 'recover', params: { user: 'aaa'} }"
-          class="forge-password"
-          style="float: right;"
-        >{{ $t('user.login.forgot-password') }}</router-link>
-      </a-form-item>
-
-      <a-form-item style="margin-top:24px">
-        <a-button
-          size="large"
-          type="primary"
-          htmlType="submit"
-          class="login-button"
-          :loading="state.loginBtn"
-          :disabled="state.loginBtn"
-        >{{ $t('user.login.login') }}</a-button>
-      </a-form-item>
     </a-form>
 
     <two-step-captcha
@@ -100,11 +68,14 @@
 </template>
 
 <script>
+  /* eslint-disable */
 import md5 from 'md5'
 import TwoStepCaptcha from '@/components/tools/TwoStepCaptcha'
 import { mapActions } from 'vuex'
 import { timeFix } from '@/utils/util'
 import { getSmsCaptcha, get2step } from '@/api/login'
+import axios from 'axios';
+import Qs from 'qs'
 
 export default {
   components: {
@@ -139,6 +110,9 @@ export default {
       })
     // this.requiredTwoStepCaptcha = true
   },
+  mounted(){
+    this.ddLoginInit();
+  },
   methods: {
     ...mapActions(['Login', 'Logout']),
     // handler
@@ -167,27 +141,80 @@ export default {
 
       state.loginBtn = true
 
-      const validateFieldsKey = customActiveKey === 'tab1' ? ['username', 'password'] : ['mobile', 'captcha']
+      const validateFieldsKey = customActiveKey === 'tab2' ? ['username', 'password'] : ['mobile', 'captcha']
 
       validateFields(validateFieldsKey, { force: true }, (err, values) => {
         if (!err) {
-          console.log('login form', values)
-          const loginParams = { ...values }
-          delete loginParams.username
-          loginParams[!state.loginType ? 'email' : 'username'] = values.username
-          loginParams.password = md5(values.password)
-          Login(loginParams)
-            .then((res) => this.loginSuccess(res))
-            .catch(err => this.requestFailed(err))
-            .finally(() => {
-              state.loginBtn = false
+          // console.log('login form', values)
+          // const loginParams = { ...values }
+          // delete loginParams.username
+          // loginParams[!state.loginType ? 'email' : 'username'] = values.username
+          // console.log(values.password);
+          // loginParams.password = md5(values.password)
+          // Login(loginParams)
+          //   .then((res) => this.loginSuccess(res))
+          //   .catch(err => this.requestFailed(err))
+          //   .finally(() => {
+          //     state.loginBtn = false
+          //   })
+          let loginFormdata = {
+            "username": values.username,
+            "password": values.password
+          };
+
+          axios.post('ti/login_api/', Qs.stringify(loginFormdata))
+            .then((response) => {
+              this.loginSuccess(response)
             })
+            .catch((error) =>{
+              this.requestFailed(error)
+            }).finally(() => {
+              state.loginBtn = false;
+          });
         } else {
           setTimeout(() => {
             state.loginBtn = false
           }, 600)
         }
       })
+    },
+    ddLoginInit(){
+      const appid = 'dingoamin5ak8wdta8eqh6';
+      const login_api_url = encodeURIComponent('http://47.106.194.167:8887/scan_login_api');
+      let goto = encodeURIComponent(`https://oapi.dingtalk.com/connect/oauth2/sns_authorize?appid=${appid}&response_type=code&scope=snsapi_login&state=STATE&redirect_uri=${login_api_url}`)
+      DDLogin({
+        id: "loginContainerId",
+        goto: goto,
+        style: "border:none;background-color:#FFFFFF;",
+        width: "370",
+        height: "370"
+      });
+
+      let handleMessage =  (event) =>{
+        let origin = event.origin;
+        if( origin == "https://login.dingtalk.com") {
+          let loginTmpCode = event.data;
+          let url2 = `https://oapi.dingtalk.com/connect/oauth2/sns_authorize?appid=${appid}&response_type=code&scope=snsapi_login&state=STATE&redirect_uri=${login_api_url}&loginTmpCode=${loginTmpCode}`
+          let loginFormdata = {
+            "ding_url": url2
+          };
+          this.loading = true;
+          axios.post('ti/scan_login/', Qs.stringify(loginFormdata))
+            .then((response) => {
+              this.loginSuccess(response);
+            })
+            .catch((error) =>{
+              this.requestFailed(error);
+            }).finally(() => {
+              state.loginBtn = false;
+          });
+        }
+      };
+      if (typeof window.addEventListener != 'undefined') {
+        window.addEventListener('message', handleMessage, false);
+      } else if (typeof window.attachEvent != 'undefined') {
+        window.attachEvent('onmessage', handleMessage);
+      }
     },
     getCaptcha (e) {
       e.preventDefault()
@@ -245,7 +272,7 @@ export default {
         })
       })
       */
-      this.$router.push({ path: '/' })
+      this.$router.push({ path: '/dashboard/workplace' })
       // 延迟 1 秒显示欢迎信息
       setTimeout(() => {
         this.$notification.success({

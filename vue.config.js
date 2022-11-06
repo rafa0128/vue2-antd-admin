@@ -5,7 +5,6 @@ const GitRevisionPlugin = require('git-revision-webpack-plugin')
 const GitRevision = new GitRevisionPlugin()
 const buildDate = JSON.stringify(new Date().toLocaleString())
 const createThemeColorReplacerPlugin = require('./config/plugin.config')
-const publicPath = process.env.NODE_ENV === 'production' ? './' : './';
 
 function resolve (dir) {
   return path.join(__dirname, dir)
@@ -41,7 +40,6 @@ const assetsCDN = {
 
 // vue.config.js
 const vueConfig = {
-  publicPath,
   configureWebpack: {
     // webpack plugins
     plugins: [
@@ -127,28 +125,13 @@ const vueConfig = {
     // development server port 8000
     port: 8000,
     // If you want to turn on the proxy, please remove the mockjs /src/main.jsL11
-    // proxy: {
-    //   '/api': {
-    //     target: 'https://mock.ihx.me/mock/5baf3052f7da7e07e04a5116/antd-pro',
-    //     ws: false,
-    //     changeOrigin: true
-    //   }
-    // }
     proxy: {
       '/ti': {
         target: 'http://ti.flatincbr.com:8887',// 你要请求的后端接口ip+port
         changeOrigin: true,// 允许跨域，在本地会创建一个虚拟服务端，然后发送请求的数据，并同时接收请求的数据，这样服务端和服务端进行数据的交互就不会有跨域问题
-        ws: true,// 开启webSocket
+        ws: false,// 开启webSocket
         pathRewrite: {
           '^/ti': '',// 替换成target中的地址
-        }
-        },
-      '/tool': {
-        target: 'http://120.238.246.118:5907',
-        changeOrigin: true,
-        ws: true,
-        pathRewrite: {
-          '^/tool': '',
         }
       }
     }
@@ -168,4 +151,3 @@ if (process.env.VUE_APP_PREVIEW === 'true') {
 }
 
 module.exports = vueConfig
-
