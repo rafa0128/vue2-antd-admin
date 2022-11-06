@@ -12,10 +12,18 @@
         :tabBarStyle="{ textAlign: 'center', borderBottom: 'unset' }"
         @change="handleTabClick"
       >
-        <a-tab-pane key="tab1" :tab="$t('扫码登录')" force-render>
+        <a-tab-pane key="tab1"  force-render>
+          <span slot="tab">
+            <a-icon type="qrcode" />
+            扫码登录
+          </span>
           <div id="loginContainerId"></div>
         </a-tab-pane>
-        <a-tab-pane key="tab2" :tab="$t('账号登录')">
+        <a-tab-pane key="tab2">
+          <span slot="tab">
+            <a-icon type="user" />
+            账号登录
+          </span>
           <a-alert v-if="isLoginError" type="error" showIcon style="margin-bottom: 24px;" :message="$t('user.login.message-invalid-credentials')" />
           <a-form-item>
             <a-input
